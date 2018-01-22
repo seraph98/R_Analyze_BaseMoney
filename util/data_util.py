@@ -2,6 +2,21 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import csv
 import time
+from util.base.base_util import crype_value
+
+
+# 对外提供方法:
+# 1. get_500_data(id)  id为基金编号, 根据基金的编号返回list数组, 数组内是tuple元组(data, value). 从当日往前500天内的数据
+# 2. update_data(id)    id为基金编号, 更新基金数据. 一直更新到当前日期.
+
+
+def get_500_data(id):
+    href = 'http://fund.jd.com/detail/'+str(id)+'.html'
+    return crype_value(href)
+
+
+def update_data(id):
+    pass
 
 
 #创建csv文件表头信息
@@ -15,20 +30,13 @@ def new_csv_key(id,value):
             date = date + 1
 
 
-#创建csv文件内容
-def add_csv_value():
-    pass
-
 #爬取内容
 def main_crype(driver):
     driver.get('http://fund.jd.com/')
     elem = driver.find_element_by_xpath("//div[@class='sort-btn one-month'][@data-sortid='3,4'][@data-sorttype='3']")
     elem.click()
     time.sleep(2)
-
     cur_pg = 1
-    # go_to_page(driver, 187)
-
     while True:
         soup = BeautifulSoup(driver.page_source, 'lxml')
         tbody = soup.tbody
@@ -52,51 +60,7 @@ def main_crype(driver):
         break
 
 
-def crype_value(url):
-    driver = webdriver.Firefox()
-    url = 'http:'+url
-    driver.get(url)
-    sp = BeautifulSoup(driver.page_source, 'lxml')
-    pg_num = 0
-    for a in sp.find_all('a'):
-        try:
-            temp_page = a.attrs.get('data-target')
-            if temp_page is None:
-                temp_page = 0
-            else:
-                temp_page = int(temp_page)
-        except Exception as e:
-            temp_page = 0
-        if temp_page > pg_num:
-            pg_num = temp_page
-    elem = driver.find_element_by_xpath("//a[@data-target='"+str(pg_num)+"']")
-    elem.click()
-    val = []
-    while True:
-        temp_val = []
-        soup = BeautifulSoup(driver.page_source, 'lxml')
-        tbody = 0
-        for td in soup.find_all('tbody'):
-            tbody = td
-        for tr in tbody.find_all('tr'):
-            cnt = 0
-            for td in tr.find_all('td'):
-                if cnt == 1:
-                    temp_val.append(td.string)
-                    break
-                cnt = cnt + 1
-        print('已经爬完'+str(pg_num)+'号页面')
-        temp_val.reverse()
-        val.extend(temp_val)
-        try:
-            elem = driver.find_element_by_xpath("//a[@class='up-page']")
-            elem.click()
-            pg_num = pg_num - 1
-        except Exception as e:
-            print(e)
-            break
-    driver.quit()
-    return val
+
 
 
 def go_to_page(driver, page):
